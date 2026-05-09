@@ -32,7 +32,7 @@ class WP_Synapse_Security {
         
         // Remove leading slash for safe concatenation
         $path = ltrim( $path, '/' );
-        $full_path = $root . $path;
+        $full_path = trailingslashit( $root ) . $path;
 
         // Use realpath only to resolve dots, but don't fail if the file doesn't exist
         $normalized_path = str_replace( '\\', '/', $full_path );

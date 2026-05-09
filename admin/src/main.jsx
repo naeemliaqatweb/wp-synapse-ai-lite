@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import SettingsApp from './SettingsApp.jsx'
 import PricingApp from './PricingApp.jsx'
+import PermissionsApp from './PermissionsApp.jsx'
 import './index.css'
 
 // Add Google Fonts
@@ -35,6 +36,16 @@ if (pricingRootEl) {
   ReactDOM.createRoot(pricingRootEl).render(
     <React.StrictMode>
       <PricingApp />
+    </React.StrictMode>,
+  )
+}
+const permissionsRootEl = document.getElementById('wp-synapse-ai-lite-permissions-root');
+console.log('Permissions Root El:', permissionsRootEl);
+if (permissionsRootEl) {
+  console.log('Mounting PermissionsApp');
+  ReactDOM.createRoot(permissionsRootEl).render(
+    <React.StrictMode>
+      <PermissionsApp />
     </React.StrictMode>,
   )
 }

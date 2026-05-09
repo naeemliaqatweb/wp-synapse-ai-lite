@@ -523,4 +523,96 @@ class WP_Synapse_File_Manager {
             'new_path' => str_replace( $root, '', $normalized_new )
         ];
     }
+
+    public function duplicate_item( $path, $newName ) {
+        $security = \WP_Synapse_Security::get_instance();
+        $full_path = $security->sanitize_path( $path );
+        
+        if ( ! $full_path || ! file_exists( $full_path ) ) {
+            return [ 'status' => 'error', 'message' => 'Original item not found' ];
+        }
+
+        // If newName contains slashes, treat it as a path relative to root
+        if ( strpos( $newName, '/' ) !== false || strpos( $newName, '\\' ) !== false ) {
+            $new_full_path = $security->sanitize_path( $newName );
+        } else {
+            $dir = dirname( $full_path );
+            $new_full_path = $dir . DIRECTORY_SEPARATOR . $newName;
+        }
+
+        if ( file_exists( $new_full_path ) ) {
+            return [ 'status' => 'error', 'message' => 'An item with this name already exists at the destination' ];
+        }
+
+        // Ensure destination directory exists
+        $new_dir = dirname( $new_full_path );
+        if ( ! is_dir( $new_dir ) ) {
+            if ( ! @mkdir( $new_dir, 0755, true ) ) {
+                return [ 'status' => 'error', 'message' => 'Destination directory does not exist and could not be created.' ];
+            }
+        }
+
+        if ( is_dir( $full_path ) ) {
+            $result = $this->recursive_copy( $full_path, $new_full_path );
+        } else {
+            $result = @copy( $full_path, $new_full_path );
+        }
+
+        if ( ! $result ) {
+            return [ 'status' => 'error', 'message' => 'Failed to duplicate item. Check permissions.' ];
+        }
+
+        return [ 'status' => 'success', 'message' => 'Item duplicated successfully' ];
+    }
+
+    private function recursive_copy( $src, $dst ) {
+        if ( ! is_dir( $src ) ) return false;
+        if ( ! is_dir( $dst ) ) {
+            if ( ! @mkdir( $dst, 0755, true ) ) return false;
+        }
+        
+        $dir = opendir( $src );
+        if ( ! $dir ) return false;
+
+        $success = true;
+        while ( false !== ( $file = readdir( $dir ) ) ) {
+            if ( ( $file != '.' ) && ( $file != '..' ) ) {
+                $src_file = $src . DIRECTORY_SEPARATOR . $file;
+                $dst_file = $dst . DIRECTORY_SEPARATOR . $file;
+                if ( is_dir( $src_file ) ) {
+                    if ( ! $this->recursive_copy( $src_file, $dst_file ) ) $success = false;
+                } else {
+                    if ( ! @copy( $src_file, $dst_file ) ) $success = false;
+                }
+            }
+        }
+        closedir( $dir );
+        return $success;
+    }
+
+    public function move_item( $path, $newParentPath ) {
+        $security = \WP_Synapse_Security::get_instance();
+        $full_path = $security->sanitize_path( $path );
+        $new_parent_full_path = $security->sanitize_path( $newParentPath );
+        
+        if ( ! $full_path || ! file_exists( $full_path ) ) {
+            return [ 'status' => 'error', 'message' => 'Source item not found' ];
+        }
+
+        if ( ! $new_parent_full_path || ! is_dir( $new_parent_full_path ) ) {
+            return [ 'status' => 'error', 'message' => 'Target directory not found or invalid' ];
+        }
+
+        $new_full_path = rtrim( $new_parent_full_path, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . basename( $full_path );
+
+        if ( file_exists( $new_full_path ) ) {
+            return [ 'status' => 'error', 'message' => 'An item with this name already exists in target directory' ];
+        }
+
+        if ( ! @rename( $full_path, $new_full_path ) ) {
+            return [ 'status' => 'error', 'message' => 'Failed to move item. Check permissions.' ];
+        }
+
+        return [ 'status' => 'success', 'message' => 'Item moved successfully' ];
+    }
 }

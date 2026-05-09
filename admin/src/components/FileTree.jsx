@@ -1,36 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Folder, File, ChevronRight, ChevronDown, Atom, FileCode, FileJson, FileType, Image as ImageIcon, Terminal, Plus, FolderPlus, Trash2, X, Check, Edit2, MoreVertical } from 'lucide-react';
+import { Folder, ChevronRight, ChevronDown, Plus, FolderPlus, Trash2, X, Check, Edit2, MoreVertical, Archive, PackageOpen, Upload, RefreshCw, FolderMinus, ZoomIn, ZoomOut, Copy, Move, Search } from 'lucide-react';
+import { getFileIcon } from '../utils/icons';
 
-const getFileIcon = (filename) => {
-    if (!filename) return <File size={12} color="#94a3b8" />;
-    const ext = filename.split('.').pop().toLowerCase();
-    
-    switch (ext) {
-        case 'jsx':
-        case 'tsx':
-            return <Atom size={12} color="#61dafb" className="lang-icon" />;
-        case 'js':
-        case 'ts':
-            return <FileCode size={12} color="#f7df1e" className="lang-icon" />;
-        case 'php':
-            return <Terminal size={12} color="#777bb4" className="lang-icon" />;
-        case 'json':
-            return <FileJson size={12} color="#cbd5e1" className="lang-icon" />;
-        case 'css':
-        case 'scss':
-            return <FileType size={12} color="#3b82f6" className="lang-icon" />;
-        case 'png':
-        case 'jpg':
-        case 'svg':
-            return <ImageIcon size={12} color="#10b981" className="lang-icon" />;
-        case 'html':
-            return <FileCode size={12} color="#ef4444" className="lang-icon" />;
-        default:
-            return <File size={12} color="#94a3b8" className="lang-icon" />;
-    }
-};
-
-const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteItem, onRenameItem, onRefresh }) => {
+const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteItem, onRenameItem, onZipItem, onUnzipItem, onUploadFile, onOpenUpload, onRefresh, refreshTrigger, collapseAllTrigger, treeFontSize, onDuplicateItem, onMoveItem, onOpenMoveModal }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,6 +24,18 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
+
+  useEffect(() => {
+    if (isOpen && refreshTrigger !== undefined) {
+        fetchChildren();
+    }
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    if (collapseAllTrigger !== undefined) {
+        setIsOpen(false);
+    }
+  }, [collapseAllTrigger]);
 
   const fetchChildren = async () => {
     setLoading(true);
@@ -106,6 +90,10 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
         result = await onCreateFolder(node.path, name);
     } else if (type === 'rename') {
         result = await onRenameItem(node.path, name);
+    } else if (type === 'duplicate') {
+        result = await onDuplicateItem(node.path, name);
+    } else if (type === 'move') {
+        result = await onMoveItem(node.path, name);
     }
 
     if (result.success) {
@@ -157,35 +145,117 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
     }
   };
 
+  const handleZip = async (e) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    setLoading(true);
+    await onZipItem(node.path);
+    if (onRefresh) onRefresh();
+    setLoading(false);
+  };
+
+  const handleUnzip = async (e) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    setLoading(true);
+    await onUnzipItem(node.path);
+    if (onRefresh) onRefresh();
+    setLoading(false);
+  };
+
+  const handleUploadClick = (e) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    onOpenUpload(node.path);
+  };
+
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragStart = (e) => {
+    e.dataTransfer.setData('text/plain', node.path);
+    e.dataTransfer.effectAllowed = 'move';
+    // Visual drag feedback
+    e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e) => {
+    e.currentTarget.style.opacity = '1';
+    setIsDragOver(false);
+  };
+
+  const handleDragOver = (e) => {
+    if (node.type === 'directory') {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+  };
+
+  const handleDragEnter = (e) => {
+    if (node.type === 'directory') {
+        setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e) => {
+    if (node.type === 'directory') {
+        e.preventDefault();
+        setIsDragOver(false);
+        const sourcePath = e.dataTransfer.getData('text/plain');
+        if (sourcePath && sourcePath !== node.path) {
+            setLoading(true);
+            const result = await onMoveItem(sourcePath, node.path);
+            if (!result.success) {
+                // Toast is handled in App.jsx
+            }
+            setLoading(false);
+        }
+    }
+  };
+
+  const iconSize = Math.max(10, Math.round(treeFontSize * 15));
+
   return (
     <div style={{ paddingLeft: '0.4rem' }}>
       <div 
-        className="file-item"
+        className={`file-item ${isDragOver ? 'drag-over' : ''}`}
         onClick={showInput === 'rename' ? null : handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        draggable={!showInput}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '0.4rem',
           padding: '2px 6px',
           cursor: 'pointer',
-          fontSize: '0.8rem',
+          fontSize: `${treeFontSize}rem`,
           borderRadius: '4px',
-          transition: 'background 0.1s',
+          transition: 'all 0.1s',
           color: node.type === 'directory' ? 'var(--text-primary)' : 'var(--text-secondary)',
           whiteSpace: 'nowrap',
-          position: 'relative'
+          position: 'relative',
+          background: isDragOver ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+          border: isDragOver ? '1px dashed var(--accent)' : '1px solid transparent'
         }}
       >
         {node.type === 'directory' ? (
-          isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />
+          isOpen ? <ChevronDown size={iconSize} /> : <ChevronRight size={iconSize} />
         ) : (
-          <div style={{ marginLeft: '12px', display: 'flex', alignItems: 'center' }}>
-             {getFileIcon(node.name)}
+          <div style={{ marginLeft: `${iconSize}px`, display: 'flex', alignItems: 'center' }}>
+             {getFileIcon(node.name, iconSize)}
           </div>
         )}
-        {node.type === 'directory' && <Folder size={12} style={{ color: '#3b82f6' }} />}
+        {node.type === 'directory' && <Folder size={iconSize} style={{ color: '#3b82f6' }} />}
         
         {showInput === 'rename' ? (
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -200,7 +270,7 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
                         background: 'var(--bg-primary)',
                         border: errorMessage ? '1px solid var(--error)' : '1px solid var(--accent)',
                         color: 'var(--text-primary)',
-                        fontSize: '0.75rem',
+                        fontSize: `${treeFontSize * 0.9}rem`,
                         padding: '1px 4px',
                         borderRadius: '2px',
                         width: '100%'
@@ -224,7 +294,7 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
                         background: showMenu ? 'var(--bg-tertiary)' : 'transparent'
                     }}
                 >
-                    <MoreVertical size={14} style={{ color: 'var(--text-secondary)' }} />
+                    <MoreVertical size={iconSize + 2} style={{ color: 'var(--text-secondary)' }} />
                 </div>
 
                 {showMenu && (
@@ -257,6 +327,13 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
                                 >
                                     <FolderPlus size={12} /> New Folder
                                 </div>
+                                <div 
+                                    className="menu-item"
+                                    onClick={handleUploadClick}
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                >
+                                    <Upload size={12} /> Upload File
+                                </div>
                                 <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
                             </>
                         )}
@@ -267,6 +344,44 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
                         >
                             <Edit2 size={12} /> Rename
                         </div>
+                        <div 
+                            className="menu-item"
+                            onClick={(e) => { 
+                                e.stopPropagation(); 
+                                const ext = node.name.includes('.') && node.type === 'file' ? node.name.split('.').pop() : '';
+                                const base = ext ? node.name.substring(0, node.name.lastIndexOf('.')) : node.name;
+                                const newName = `${base}-copy${ext ? '.' + ext : ''}`;
+                                onDuplicateItem(node.path, newName); 
+                                setShowMenu(false); 
+                            }}
+                            style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                        >
+                            <Copy size={12} /> Duplicate
+                        </div>
+                        <div 
+                            className="menu-item"
+                            onClick={(e) => { e.stopPropagation(); onOpenMoveModal(node.path); setShowMenu(false); }}
+                            style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                        >
+                            <Search size={12} /> Move to Folder...
+                        </div>
+                        {node.name.toLowerCase().endsWith('.zip') ? (
+                            <div 
+                                className="menu-item"
+                                onClick={handleUnzip}
+                                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                            >
+                                <PackageOpen size={12} /> Extract ZIP
+                            </div>
+                        ) : (
+                            <div 
+                                className="menu-item"
+                                onClick={handleZip}
+                                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                >
+                                <Archive size={12} /> Compress to ZIP
+                            </div>
+                        )}
                         <div 
                             className="menu-item"
                             onClick={handleDelete}
@@ -285,7 +400,7 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
       {(showInput === 'file' || showInput === 'folder') && (
           <div style={{ marginLeft: '1.5rem', display: 'flex', flexDirection: 'column', padding: '2px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {showInput === 'file' ? <File size={10} /> : <Folder size={10} />}
+                {showInput === 'file' ? getFileIcon(inputValue, iconSize) : <Folder size={iconSize} style={{ color: '#3b82f6' }} />}
                 <input 
                     autoFocus
                     value={inputValue}
@@ -296,7 +411,7 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
                         background: 'var(--bg-primary)',
                         border: errorMessage ? '1px solid var(--error)' : '1px solid var(--accent)',
                         color: 'var(--text-primary)',
-                        fontSize: '0.75rem',
+                        fontSize: `${treeFontSize * 0.9}rem`,
                         padding: '1px 4px',
                         borderRadius: '2px',
                         width: '100px'
@@ -311,17 +426,27 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
       
       {node.type === 'directory' && isOpen && children.length > 0 && (
         <div style={{ marginLeft: '0.5rem', borderLeft: '1px solid var(--border)' }}>
-          {children.map((child, i) => (
-            <FileItem 
-                key={i} 
-                node={child} 
-                onFileClick={onFileClick} 
-                onCreateFile={onCreateFile}
-                onCreateFolder={onCreateFolder}
-                onDeleteItem={onDeleteItem}
-                onRenameItem={onRenameItem}
-                onRefresh={fetchChildren}
-            />
+          {children.map((child) => (
+                <FileItem 
+                    key={child.path} 
+                    node={child} 
+                    onFileClick={onFileClick} 
+                    onCreateFile={onCreateFile}
+                    onCreateFolder={onCreateFolder}
+                    onDeleteItem={onDeleteItem}
+                    onRenameItem={onRenameItem}
+                    onZipItem={onZipItem}
+                    onUnzipItem={onUnzipItem}
+                    onUploadFile={onUploadFile}
+                    onOpenUpload={onOpenUpload}
+                    onRefresh={fetchChildren}
+                    refreshTrigger={refreshTrigger}
+                    collapseAllTrigger={collapseAllTrigger}
+                    treeFontSize={treeFontSize}
+                    onDuplicateItem={onDuplicateItem}
+                    onMoveItem={onMoveItem}
+                    onOpenMoveModal={onOpenMoveModal}
+                />
           ))}
         </div>
       )}
@@ -329,7 +454,7 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
   );
 };
 
-const FileTree = ({ files, onFileClick, onCreateFile, onCreateFolder, onDeleteItem, onRenameItem, rootPath }) => {
+const FileTree = ({ files, onFileClick, onCreateFile, onCreateFolder, onDeleteItem, onRenameItem, onZipItem, onUnzipItem, onUploadFile, onOpenUpload, onRefresh, rootPath, refreshTrigger, onCollapseAll, collapseAllTrigger, treeFontSize, setTreeFontSize, onDuplicateItem, onMoveItem, onOpenMoveModal }) => {
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -369,38 +494,83 @@ const FileTree = ({ files, onFileClick, onCreateFile, onCreateFolder, onDeleteIt
     }
   };
 
+  const zoomIn = () => setTreeFontSize(prev => Math.min(prev + 0.1, 1.5));
+  const zoomOut = () => setTreeFontSize(prev => Math.max(prev - 0.1, 0.5));
+
+  const [isRootDragOver, setIsRootDragOver] = useState(false);
+
+  const handleRootDrop = async (e) => {
+    e.preventDefault();
+    setIsRootDragOver(false);
+    const sourcePath = e.dataTransfer.getData('text/plain');
+    if (sourcePath && sourcePath !== rootPath) {
+        const result = await onMoveItem(sourcePath, rootPath);
+        if (!result.success) {
+            // Toast is handled in App.jsx
+        }
+    }
+  };
+
   return (
     <div className="file-tree-container" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
       <div className="file-tree-toolbar" style={{ 
           padding: '0.4rem 0.8rem', 
           display: 'flex', 
-          justifyContent: 'flex-end', 
-          gap: '10px',
+          justifyContent: 'flex-start', 
+          gap: '8px',
           borderBottom: '1px solid var(--border)',
           background: 'var(--bg-secondary)',
           position: 'sticky',
           top: 0,
           zIndex: 5
       }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+              <button onClick={zoomOut} className="toolbar-btn" title="Zoom Out Tree"><ZoomOut size={14} /></button>
+              <button onClick={zoomIn} className="toolbar-btn" title="Zoom In Tree"><ZoomIn size={14} /></button>
+          </div>
+
+          <div style={{ width: '1px', height: '16px', background: 'var(--border)', alignSelf: 'center' }} />
+          
           <button 
             onClick={() => { setShowInput('file'); setInputValue(''); setErrorMessage(''); }}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+            className="toolbar-btn"
+            title="New File"
           >
-              <Plus size={14} /> File
+              <Plus size={14} />
           </button>
           <button 
             onClick={() => { setShowInput('folder'); setInputValue(''); setErrorMessage(''); }}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+            className="toolbar-btn"
+            title="New Folder"
           >
-              <FolderPlus size={14} /> Folder
+              <FolderPlus size={14} />
+          </button>
+          
+          <button 
+            onClick={() => onCollapseAll && onCollapseAll()}
+            className="toolbar-btn"
+            title="Collapse All Folders"
+          >
+              <FolderMinus size={14} />
           </button>
       </div>
 
-      <div style={{ padding: '0.5rem' }}>
+      <div 
+        onDragOver={(e) => { e.preventDefault(); setIsRootDragOver(true); }}
+        onDragEnter={() => setIsRootDragOver(true)}
+        onDragLeave={() => setIsRootDragOver(false)}
+        onDrop={handleRootDrop}
+        style={{ 
+            padding: '0.5rem', 
+            flex: 1,
+            background: isRootDragOver ? 'rgba(99, 102, 241, 0.05)' : 'transparent',
+            transition: 'background 0.2s'
+        }}
+      >
         {showInput && (
             <div style={{ paddingLeft: '0.4rem', display: 'flex', flexDirection: 'column', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {showInput === 'file' ? <File size={12} /> : <Folder size={12} />}
+                    {showInput === 'file' ? getFileIcon(inputValue, 12) : <Folder size={12} style={{ color: '#3b82f6' }} />}
                     <input 
                         autoFocus
                         value={inputValue}
@@ -425,15 +595,26 @@ const FileTree = ({ files, onFileClick, onCreateFile, onCreateFolder, onDeleteIt
             </div>
         )}
 
-        {files.map((file, i) => (
+        {files.map((file) => (
             <FileItem 
-                key={i} 
+                key={file.path} 
                 node={file} 
                 onFileClick={onFileClick} 
                 onCreateFile={onCreateFile}
                 onCreateFolder={onCreateFolder}
                 onDeleteItem={onDeleteItem}
                 onRenameItem={onRenameItem}
+                onZipItem={onZipItem}
+                onUnzipItem={onUnzipItem}
+                onUploadFile={onUploadFile}
+                onOpenUpload={onOpenUpload}
+                onRefresh={onRefresh}
+                refreshTrigger={refreshTrigger}
+                collapseAllTrigger={collapseAllTrigger}
+                treeFontSize={treeFontSize}
+                onDuplicateItem={onDuplicateItem}
+                onMoveItem={onMoveItem}
+                onOpenMoveModal={onOpenMoveModal}
             />
         ))}
       </div>

@@ -70,10 +70,10 @@ const PermissionsTool = () => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ fontSize: '0.9rem', color: '#cbd5e1', lineHeight: '1.6', background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
-                <strong style={{ color: '#fff', display: 'block', marginBottom: '8px' }}>How AI Permissions Work:</strong>
-                If you want the AI to modify or create files automatically during the <em>Review & Execute</em> phase, the system needs write access. 
-                Before running the AI, select your active plugin or theme and click <strong>Allow AI Write</strong>. 
-                Once the AI has finished its task, you should immediately secure your server by clicking <strong>Revert Permissions</strong>.
+                <strong style={{ color: '#fff', display: 'block', marginBottom: '8px' }}>File Write Permissions:</strong>
+                For the code editor to save changes directly to your server, the target theme or plugin directory must be writable. 
+                Select your target directory below and click <strong>Allow Write Access</strong> to grant temporary permissions. 
+                Once your editing is complete, it is recommended to click <strong>Revert to Secure</strong> for maximum security.
             </div>
 
             <div style={{ display: 'flex', gap: '16px', backgroundColor: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
@@ -133,14 +133,14 @@ const PermissionsTool = () => {
                     disabled={loading || !selectedDir}
                     style={{ flex: 1, padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', opacity: loading ? 0.7 : 1 }}
                 >
-                    <ShieldAlert size={16} /> Allow AI Write (0777)
+                    <ShieldAlert size={16} /> Allow Write Access (0777)
                 </button>
                 <button 
                     onClick={() => handlePermission('revert')}
                     disabled={loading || !selectedDir}
                     style={{ flex: 1, padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#10b981', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', opacity: loading ? 0.7 : 1 }}
                 >
-                    <ShieldOff size={16} /> Revert Permissions (0755)
+                    <ShieldOff size={16} /> Revert to Secure (0755)
                 </button>
             </div>
         </div>
