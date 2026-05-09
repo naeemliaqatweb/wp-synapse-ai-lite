@@ -368,63 +368,69 @@ function App() {
                 <button onClick={() => setIsDarkMode(!isDarkMode)} className="nav-btn" title="Toggle Theme">{isDarkMode ? <Sun size={20} /> : <Moon size={20} />}</button>
               </nav>
 
-              <aside className={`synapse-sidebar ${(activeTab === 'files' || activeTab === 'search') && showSidebar ? 'visible' : 'hidden'}`} style={{ width: window.innerWidth > 768 ? sidebarWidth : '280px' }}>
-                {activeTab === 'files' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <div className="sidebar-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '0.8rem', position: 'relative' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span className="sidebar-title" style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ffffff' }}>EXPLORER</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <button onClick={handleRefresh} className="header-action-btn" title="Refresh">
-                            <motion.div
-                                animate={{ rotate: isRefreshing ? 360 : 0 }}
-                                transition={{ duration: 0.6, ease: "easeInOut" }}
-                                style={{ display: 'flex' }}
-                            >
-                                <RefreshCw size={11} />
-                            </motion.div>
-                          </button>
-                              <button onClick={() => openUploadModal(rootPath)} className="header-action-btn" title="Upload"><Upload size={11} /></button>
+                <aside className={`synapse-sidebar ${(activeTab === 'files' || activeTab === 'search') && showSidebar ? 'visible' : 'hidden'}`} style={{ width: window.innerWidth > 768 ? sidebarWidth : '280px' }}>
+                    {activeTab === 'files' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="sidebar-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '0.8rem', position: 'relative' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span className="sidebar-title" style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ffffff' }}>EXPLORER</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <button onClick={handleRefresh} className="header-action-btn" title="Refresh">
+                                <motion.div
+                                    animate={{ rotate: isRefreshing ? 360 : 0 }}
+                                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                                    style={{ display: 'flex' }}
+                                >
+                                    <RefreshCw size={11} />
+                                </motion.div>
+                            </button>
+                                <button onClick={() => openUploadModal(rootPath)} className="header-action-btn" title="Upload"><Upload size={11} /></button>
+                                </div>
                             </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <select value={rootPath} onChange={(e) => setRootPath(e.target.value)} className="sidebar-select" style={{ height: '32px' }}>
-                                    <option value="">📁 Root</option>
-                                    <option value="wp-content/themes">🎨 Themes</option>
-                                    <option value="wp-content/plugins">🔌 Plugins</option>
-                                </select>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <select value={rootPath} onChange={(e) => setRootPath(e.target.value)} className="sidebar-select" style={{ height: '32px' }}>
+                                        <option value="">📁 Root</option>
+                                        <option value="wp-content/themes">🎨 Themes</option>
+                                        <option value="wp-content/plugins">🔌 Plugins</option>
+                                    </select>
+                                </div>
                             </div>
-                          </div>
+                            </div>
+                            <div style={{ flex: 1, overflowY: 'auto' }}>
+                                <FileTree 
+                                    files={files} onFileClick={handleFileClick} onCreateFile={handleCreateFile} onCreateFolder={handleCreateFolder}
+                                    onDeleteItem={handleDeleteItem} onRenameItem={handleRenameItem} onDuplicateItem={handleDuplicateItem}
+                                    onMoveItem={handleMoveItem} onOpenMoveModal={openMoveModal} onZipItem={handleZipItem} onUnzipItem={handleUnzipItem}
+                                    onUploadFile={handleUploadFile} onOpenUpload={openUploadModal} onRefresh={handleRefresh}
+                                    refreshTrigger={refreshTrigger} onCollapseAll={handleCollapseAll} collapseAllTrigger={collapseAllTrigger}
+                                    rootPath={rootPath} treeFontSize={treeFontSize} setTreeFontSize={setTreeFontSize}
+                                />
+                            </div>
                         </div>
-                        <div style={{ flex: 1, overflowY: 'auto' }}>
-                            <FileTree 
-                                files={files} onFileClick={handleFileClick} onCreateFile={handleCreateFile} onCreateFolder={handleCreateFolder}
-                                onDeleteItem={handleDeleteItem} onRenameItem={handleRenameItem} onDuplicateItem={handleDuplicateItem}
-                                onMoveItem={handleMoveItem} onOpenMoveModal={openMoveModal} onZipItem={handleZipItem} onUnzipItem={handleUnzipItem}
-                                onUploadFile={handleUploadFile} onOpenUpload={openUploadModal} onRefresh={handleRefresh}
-                                refreshTrigger={refreshTrigger} onCollapseAll={handleCollapseAll} collapseAllTrigger={collapseAllTrigger}
-                                rootPath={rootPath} treeFontSize={treeFontSize} setTreeFontSize={setTreeFontSize}
-                            />
-                        </div>
-                    </div>
-                )}
-                
-                {activeTab === 'search' && (
-                    <SidebarSearch onFileClick={(file) => { handleFileClick(file); setActiveTab('files'); }} isDarkMode={isDarkMode} />
-                )}
-              </aside>
+                    )}
+                    {activeTab === 'search' && <SidebarSearch onFileClick={handleFileClick} />}
+                </aside>
 
-               <main className="synapse-main" style={{ display: 'flex', flexDirection: 'column' }}>
-                  {(activeTab === 'files' || activeTab === 'search') ? (
-                    <CodeWorkspace 
-                        activeFile={activeFile} openFiles={openFiles} setOpenFiles={setOpenFiles}
-                        setActiveFile={setActiveFile} isDarkMode={isDarkMode} editorFontSize={editorFontSize}
-                        setEditorFontSize={setEditorFontSize} isLoadingFile={isLoadingFile}
-                    />
-                  ) : (
-                    <SettingsManager isDarkMode={isDarkMode} />
-                  )}
+                <main className="synapse-main" style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                    {activeTab === 'settings' ? (
+                        <SettingsManager 
+                            isDarkMode={isDarkMode} treeFontSize={treeFontSize} setTreeFontSize={setTreeFontSize} 
+                            editorFontSize={editorFontSize} setEditorFontSize={setEditorFontSize} 
+                        />
+                    ) : (activeTab === 'files' || activeTab === 'search') ? (
+                        <CodeWorkspace 
+                            activeFile={activeFile} openFiles={openFiles} setOpenFiles={setOpenFiles} setActiveFile={setActiveFile} 
+                            isDarkMode={isDarkMode} editorFontSize={editorFontSize} setEditorFontSize={setEditorFontSize} isLoadingFile={isLoadingFile}
+                        />
+                    ) : (
+                        <div style={{ flex: 1, background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ textAlign: 'center', opacity: 0.5 }}>
+                                <SettingsIcon size={48} style={{ marginBottom: '16px' }} />
+                                <p>Select a tab from the sidebar</p>
+                            </div>
+                        </div>
+                    )}
                 </main>
           </div>
 

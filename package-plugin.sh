@@ -4,7 +4,7 @@
 # This script creates a clean ZIP for distribution
 
 PLUGIN_NAME="wp-synapse-ai-lite"
-VERSION="1.1.0"
+VERSION="1.0.1"
 ZIP_FILE="${PLUGIN_NAME}-v${VERSION}.zip"
 
 echo "🚀 Starting packaging process for ${PLUGIN_NAME} v${VERSION}..."
@@ -26,8 +26,7 @@ mkdir -p ${TEMP_DIR}/${PLUGIN_NAME}
 # 4. Copy only necessary files
 echo "📂 Copying production files..."
 cp -r includes ${TEMP_DIR}/${PLUGIN_NAME}/
-cp -r admin/dist ${TEMP_DIR}/${PLUGIN_NAME}/admin-dist # Rename to keep it clean
-# Note: In class-core.php we point to admin/dist/assets, so we should keep the structure
+cp -r vendor ${TEMP_DIR}/${PLUGIN_NAME}/
 mkdir -p ${TEMP_DIR}/${PLUGIN_NAME}/admin
 cp -r admin/dist ${TEMP_DIR}/${PLUGIN_NAME}/admin/
 

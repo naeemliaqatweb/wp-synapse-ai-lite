@@ -1,22 +1,59 @@
 <?php
 /**
  * Plugin Name: Synapse Lite – AI Code Editor
- * Plugin URI: https://example.com/wp-synapse-ai-lite
- * Description: A powerful AI-assisted code editor for WordPress (Lite Version).
- * Version: 1.0.0
- * Author: Naeem Liaqat
- * Author URI: https://example.com
+ * Plugin URI: https://synapse.com
+ * Description: The ultimate professional IDE for WordPress. Features advanced global code search (grep), visual side-by-side Diff mode, Monaco Editor (VS Code engine), and enterprise file management.
+ * Version: 1.0.1
+ * Author: Synapse Team
+ * Author URI: https://synapse.com
  * Text Domain: wp-synapse-ai-lite
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
+
+if ( ! function_exists( 'wsaltuwifm_fs' ) ) {
+    // Create a helper function for easy SDK access.
+    function wsaltuwifm_fs() {
+        global $wsaltuwifm_fs;
+
+        if ( ! isset( $wsaltuwifm_fs ) ) {
+            // Include Freemius SDK.
+            require_once dirname( __FILE__ ) . '/vendor/freemius/start.php';
+
+            $wsaltuwifm_fs = fs_dynamic_init( array(
+                'id'                  => '29361',
+                'slug'                => 'wp-synapse-ai-lite-the-ultimate-wordpress-ide-file-manager',
+                'type'                => 'plugin',
+                'public_key'          => 'pk_d7c9b7d63df54a933d98d73245932',
+                'is_premium'          => true,
+                'is_premium_only'     => true,
+                'has_addons'          => false,
+                'has_paid_plans'      => true,
+                'is_org_compliant'    => true,
+                // Automatically removed in the free version. If you're not using the
+                // auto-generated free version, delete this line before uploading to wp.org.
+                'wp_org_gatekeeper'   => 'OA7#BoRiBNqdf52FvzEf!!074aRLPs8fspif$7K1#4u4Csys1fQlCecVcUTOs2mcpeVHi#C2j9d09fOTvbC0HloPT7fFee5WdS3G',
+                'menu'                => array(
+                    'support'        => false,
+                ),
+            ) );
+        }
+
+        return $wsaltuwifm_fs;
+    }
+
+    // Init Freemius.
+    wsaltuwifm_fs();
+    // Signal that SDK was initiated.
+    do_action( 'wsaltuwifm_fs_loaded' );
+}
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
 // Define Constants
-define( 'WP_SYNAPSE_AI_LITE_VERSION', '1.0.0' );
+define( 'WP_SYNAPSE_AI_LITE_VERSION', '1.0.1' );
 define( 'WP_SYNAPSE_AI_LITE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WP_SYNAPSE_AI_LITE_URL', plugin_dir_url( __FILE__ ) );
 
@@ -55,8 +92,8 @@ register_activation_hook( __FILE__, function() {
 
 // Plugin Action Links
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), function( $links ) {
-    $settings_link = '<a href="admin.php?page=wp-synapse-ai-lite-settings">' . __( 'Settings', 'wp-synapse-ai-lite' ) . '</a>';
     $file_manager_link = '<a href="admin.php?page=wp-synapse-ai-lite">' . __( 'File Manager', 'wp-synapse-ai-lite' ) . '</a>';
-    array_unshift( $links, $settings_link, $file_manager_link );
+    $site_link = '<a href="https://synapse.com" target="_blank">' . __( 'Synapse AI', 'wp-synapse-ai-lite' ) . '</a>';
+    array_unshift( $links, $file_manager_link, $site_link );
     return $links;
 });

@@ -48,17 +48,36 @@ class WP_Synapse_Core {
 			'dashicons-superhero',
 			25
 		);
+
+        // Hidden Settings page for plugin action links
+        add_submenu_page(
+            null,
+            __( 'Settings', 'wp-synapse-ai-lite' ),
+            __( 'Settings', 'wp-synapse-ai-lite' ),
+            'manage_options',
+            'wp-synapse-ai-lite-settings',
+            [ $this, 'render_settings_page' ]
+        );
 	}
 
 	public function render_admin_page() {
+        if ( ! wsaltuwifm_fs()->is_registered() || ! wsaltuwifm_fs()->can_use_premium_code() ) {
+            return;
+        }
 		echo '<div id="wp-synapse-ai-lite-root"></div>';
 	}
 
 	public function render_settings_page() {
+        if ( ! wsaltuwifm_fs()->is_registered() || ! wsaltuwifm_fs()->can_use_premium_code() ) {
+            return;
+        }
 		echo '<div id="wp-synapse-ai-lite-settings-root"></div>';
 	}
 
 	public function render_pricing_page() {
+        if ( ! wsaltuwifm_fs()->is_registered() || ! wsaltuwifm_fs()->can_use_premium_code() ) {
+            return;
+        }
 		echo '<div id="wp-synapse-ai-lite-pricing-root"></div>';
 	}
 
@@ -248,6 +267,11 @@ class WP_Synapse_Core {
 		if ( strpos( $hook, 'synapse' ) === false ) {
 			return;
 		}
+
+        // License Check
+        if ( ! wsaltuwifm_fs()->is_registered() || ! wsaltuwifm_fs()->can_use_premium_code() ) {
+            return;
+        }
 
 		// Enqueue React application
 		// In production, we'd point to the built files.
