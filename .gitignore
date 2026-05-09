@@ -1,0 +1,15 @@
+# WP Synapse AI Lite - Git Ignore
+vendor/
+admin/node_modules/
+admin/dist/
+*.zip
+.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
