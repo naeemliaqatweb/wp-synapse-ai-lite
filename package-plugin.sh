@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# WP Synapse AI Lite - Packaging Script
+# WP Synapse AI - Freemius Packaging Script
 # This script creates a clean ZIP for distribution
 
-PLUGIN_NAME="wp-synapse-ai-lite"
+PLUGIN_NAME="wp-synapse-ai-premimum"
 VERSION="1.0.1"
 ZIP_FILE="${PLUGIN_NAME}-v${VERSION}.zip"
 
@@ -26,11 +26,14 @@ mkdir -p ${TEMP_DIR}/${PLUGIN_NAME}
 # 4. Copy only necessary files
 echo "📂 Copying production files..."
 cp -r includes ${TEMP_DIR}/${PLUGIN_NAME}/
-cp -r vendor ${TEMP_DIR}/${PLUGIN_NAME}/
+cp -r premium ${TEMP_DIR}/${PLUGIN_NAME}/
+cp -r freemius ${TEMP_DIR}/${PLUGIN_NAME}/
+cp -r public ${TEMP_DIR}/${PLUGIN_NAME}/
 mkdir -p ${TEMP_DIR}/${PLUGIN_NAME}/admin
 cp -r admin/dist ${TEMP_DIR}/${PLUGIN_NAME}/admin/
 
-cp wp-synapse-ai-lite.php ${TEMP_DIR}/${PLUGIN_NAME}/
+cp wp-synapse-ai.php ${TEMP_DIR}/${PLUGIN_NAME}/
+cp readme.txt ${TEMP_DIR}/${PLUGIN_NAME}/
 cp README.md ${TEMP_DIR}/${PLUGIN_NAME}/
 cp PRODUCT_DETAILS.md ${TEMP_DIR}/${PLUGIN_NAME}/
 cp PACKAGING_GUIDE.md ${TEMP_DIR}/${PLUGIN_NAME}/
@@ -47,4 +50,4 @@ echo "🧹 Cleaning up..."
 rm -rf ${TEMP_DIR}
 
 echo "✅ Success! Your distribution ZIP is ready: ${ZIP_FILE}"
-echo "📝 Note: You can now upload this file to your sales platform."
+echo "📝 Note: You can now upload this file to Freemius or your sales platform."

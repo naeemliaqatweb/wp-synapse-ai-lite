@@ -18,7 +18,7 @@ class WP_Synapse_Security {
 	private function __construct() {}
 
 	public function check_permissions() {
-		return current_user_can( 'manage_options' ) && wsaltuwifm_fs()->is_registered() && wsaltuwifm_fs()->can_use_premium_code();
+		return current_user_can( 'manage_options' );
 	}
 
 	public function validate_nonce( $request ) {

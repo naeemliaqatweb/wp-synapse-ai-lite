@@ -31,8 +31,8 @@ const FileSearch = ({ onFileClick, isDarkMode, onExpandChange }) => {
             if (query.length >= 2) {
                 setLoading(true);
                 try {
-                    const response = await fetch(`${window.wpSynapseAILite.root}/search-files?q=${encodeURIComponent(query)}`, {
-                        headers: { 'X-WP-Nonce': window.wpSynapseAILite.nonce }
+                    const response = await fetch(`${window.wpSynapseAI.root}/search-files?q=${encodeURIComponent(query)}`, {
+                        headers: { 'X-WP-Nonce': window.wpSynapseAI.nonce }
                     });
                     const data = await response.json();
                     setResults(data);

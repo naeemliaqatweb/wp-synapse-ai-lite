@@ -10,8 +10,8 @@ const FolderBrowser = ({ currentPath, onSelect, treeFontSize }) => {
     const fetchFolders = async (path = '') => {
         setLoading(true);
         try {
-            const response = await fetch(`${window.wpSynapseAILite.root}/files?path=${encodeURIComponent(path)}`, {
-                headers: { 'X-WP-Nonce': window.wpSynapseAILite.nonce }
+            const response = await fetch(`${window.wpSynapseAI.root}/files?path=${encodeURIComponent(path)}`, {
+                headers: { 'X-WP-Nonce': window.wpSynapseAI.nonce }
             });
             const data = await response.json();
             // Filter only directories

@@ -18,8 +18,8 @@ const PermissionsTool = () => {
     const fetchSubDirs = async (dir) => {
         setLoadingSubDirs(true);
         try {
-            const response = await fetch(`${window.wpSynapseAILite.root}/files?path=${dir}`, {
-                headers: { 'X-WP-Nonce': window.wpSynapseAILite.nonce }
+            const response = await fetch(`${window.wpSynapseAI.root}/files?path=${dir}`, {
+                headers: { 'X-WP-Nonce': window.wpSynapseAI.nonce }
             });
             const data = await response.json();
             const directories = data.filter(item => item.type === 'directory');
@@ -48,9 +48,9 @@ const PermissionsTool = () => {
         const targetPath = `${baseDir}/${selectedDir}`;
 
         try {
-            const response = await fetch(`${window.wpSynapseAILite.root}/fix-permissions`, {
+            const response = await fetch(`${window.wpSynapseAI.root}/fix-permissions`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': window.wpSynapseAILite.nonce },
+                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': window.wpSynapseAI.nonce },
                 body: JSON.stringify({ path: targetPath, mode })
             });
             const data = await response.json();

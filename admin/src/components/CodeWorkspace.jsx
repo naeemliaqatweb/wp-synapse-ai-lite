@@ -3,8 +3,10 @@ import { Editor, DiffEditor } from '@monaco-editor/react';
 import { X, Image as ImageIcon, ZoomIn, ZoomOut, GitCompare, Edit, Search, Sparkles, Wand2, MessageSquare, ChevronDown, CheckCircle, Loader2, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from './Modal';
+import { useFeatures } from './FeatureContext';
 
-const CodeWorkspace = ({ activeFile, openFiles, setOpenFiles, setActiveFile, isDarkMode, editorFontSize, setEditorFontSize, isLoadingFile }) => {
+const CodeWorkspace = ({ activeFile, openFiles, setOpenFiles, setActiveFile, isDarkMode, editorFontSize, setEditorFontSize, isLoadingFile, onAISearch, onSelectionChange }) => {
+  const { isEnabled } = useFeatures();
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
   const [isDiffMode, setIsDiffMode] = useState(false);
   const [tabMenu, setTabMenu] = useState({ isOpen: false, x: 0, y: 0, file: null });
@@ -142,9 +144,9 @@ const CodeWorkspace = ({ activeFile, openFiles, setOpenFiles, setActiveFile, isD
             setActiveFile({ ...activeFile, content, originalContent: content, isDirty: false });
 
             try {
-              const response = await fetch(`${window.wpSynapseAILite.root}/save-file`, {
+              const response = await fetch(`${window.wpSynapseAI.root}/save-file`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': window.wpSynapseAILite.nonce },
+                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': window.wpSynapseAI.nonce },
                 body: JSON.stringify({ path: activeFile.path, content })
               });
               const data = await response.json();
@@ -360,7 +362,7 @@ const CodeWorkspace = ({ activeFile, openFiles, setOpenFiles, setActiveFile, isD
                     <Search size={14} />
                 </button>
             )}
-            {activeFile && !activeFile.isImage && !activeFile.isDiff && (
+            {activeFile && !activeFile.isImage && !activeFile.isDiff && isEnabled('diff_mode') && (
                 <button 
                     onClick={() => setIsDiffMode(!isDiffMode)} 
                     className={`header-action-btn ${isDiffMode ? 'active' : ''}`}
@@ -376,7 +378,7 @@ const CodeWorkspace = ({ activeFile, openFiles, setOpenFiles, setActiveFile, isD
                 <div className="ai-search-container">
                     <button 
                         onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => setIsAIModalOpen(true)} 
+                        onClick={() => onAISearch(selection.text)} 
                         className="header-action-btn ai-search-btn"
                         title="AI Search & Review"
                         style={{ 
@@ -480,8 +482,31 @@ const CodeWorkspace = ({ activeFile, openFiles, setOpenFiles, setActiveFile, isD
             </div>
           ) : activeFile.isDiff ? (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '8px 16px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ padding: '8px 16px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>Reviewing Changes: <strong>{activeFile.name}</strong></span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                            onClick={() => {
+                                // Close the diff tab and go back to original
+                                setOpenFiles(openFiles.filter(f => f.path !== activeFile.path));
+                                setActiveFile(activeFile.originalFile || openFiles[0]);
+                            }}
+                            style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '4px', padding: '2px 12px', fontSize: '0.75rem', cursor: 'pointer' }}
+                        >
+                            Discard
+                        </button>
+                        <button 
+                            onClick={() => {
+                                if (!activeFile.originalFile) return;
+                                const updatedFile = { ...activeFile.originalFile, content: activeFile.suggested_content, isDirty: true };
+                                setOpenFiles(openFiles.map(f => f.path === updatedFile.path ? updatedFile : f).filter(f => f.path !== activeFile.path));
+                                setActiveFile(updatedFile);
+                            }}
+                            style={{ background: 'var(--success)', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 12px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                            Accept & Apply
+                        </button>
+                    </div>
                 </div>
                 <DiffEditor
                   key={`diff-${activeFile.path}-${editorFontSize}`}
@@ -574,13 +599,15 @@ const CodeWorkspace = ({ activeFile, openFiles, setOpenFiles, setActiveFile, isD
                       const model = editor.getModel();
                       const text = model.getValueInRange(e.selection);
                       if (text && text.trim().length > 0) {
-                          setSelection({
+                          const sel = {
                               text: text,
                               range: e.selection
-                          });
+                          };
+                          setSelection(sel);
+                          if (onSelectionChange) onSelectionChange(sel);
                       } else {
                           // Only clear if the menu isn't currently open
-                          // This prevents the menu from vanishing when clicking its own button
+                          if (onSelectionChange) onSelectionChange(null);
                           setSelection(prev => {
                               if (prev && (document.activeElement.closest('.ai-search-container') || isAIModalOpen)) {
                                   return prev;

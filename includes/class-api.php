@@ -21,13 +21,13 @@ class WP_Synapse_API {
 	}
 
 	public function register_routes() {
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/files', [
+		register_rest_route( 'wp-synapse-ai/v1', '/files', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_files' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/file-content', [
+		register_rest_route( 'wp-synapse-ai/v1', '/file-content', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'get_file_content' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
@@ -35,13 +35,13 @@ class WP_Synapse_API {
 
 
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/save-file', [
+		register_rest_route( 'wp-synapse-ai/v1', '/save-file', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'save_file' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/revert-file', [
+		register_rest_route( 'wp-synapse-ai/v1', '/revert-file', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'revert_file' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
@@ -53,72 +53,274 @@ class WP_Synapse_API {
         
 
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/create-file', [
+		register_rest_route( 'wp-synapse-ai/v1', '/create-file', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'create_file' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/create-folder', [
+		register_rest_route( 'wp-synapse-ai/v1', '/create-folder', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'create_folder' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/delete-item', [
+		register_rest_route( 'wp-synapse-ai/v1', '/delete-item', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'delete_item' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/rename-item', [
+		register_rest_route( 'wp-synapse-ai/v1', '/rename-item', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'rename_item' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/fix-permissions', [
+		register_rest_route( 'wp-synapse-ai/v1', '/fix-permissions', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'fix_permissions' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 		
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/upload-file', [
+		register_rest_route( 'wp-synapse-ai/v1', '/upload-file', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'upload_file' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/zip-item', [
+		register_rest_route( 'wp-synapse-ai/v1', '/zip-item', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'zip_item' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/unzip-item', [
+		register_rest_route( 'wp-synapse-ai/v1', '/unzip-item', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'unzip_item' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 		
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/search-files', [
+		register_rest_route( 'wp-synapse-ai/v1', '/search-files', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'search_files' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/duplicate-item', [
+		register_rest_route( 'wp-synapse-ai/v1', '/duplicate-item', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'duplicate_item' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
 
-		register_rest_route( 'wp-synapse-ai-lite/v1', '/move-item', [
+		register_rest_route( 'wp-synapse-ai/v1', '/move-item', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'move_item' ],
 			'permission_callback' => [ $this, 'check_permissions' ],
 		] );
+
+		register_rest_route( 'wp-synapse-ai/v1', '/settings', [
+			'methods'             => 'GET',
+			'callback'            => [ $this, 'get_settings' ],
+			'permission_callback' => [ $this, 'check_permissions' ],
+		] );
+
+		register_rest_route( 'wp-synapse-ai/v1', '/settings', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'save_settings' ],
+			'permission_callback' => [ $this, 'check_permissions' ],
+		] );
+
+		register_rest_route( 'wp-synapse-ai/v1', '/index-files', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'index_files' ],
+			'permission_callback' => [ $this, 'check_permissions' ],
+		] );
+
+		register_rest_route( 'wp-synapse-ai/v1', '/chat', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'ai_chat' ],
+			'permission_callback' => [ $this, 'check_permissions' ],
+		] );
 	}
+
+    private function get_active_theme_hooks() {
+        $functions_php_path = get_stylesheet_directory() . '/functions.php';
+        if ( ! file_exists( $functions_php_path ) ) {
+            return [];
+        }
+        $content = @file_get_contents( $functions_php_path );
+        if ( empty( $content ) ) {
+            return [];
+        }
+        $hooks = [];
+        // Scan for add_action / add_filter calls
+        if ( preg_match_all( '/add_(action|filter)\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,\s*([^\)]+)\)/i', $content, $matches ) ) {
+            foreach ( $matches[2] as $index => $hook_name ) {
+                $type = strtolower( $matches[1][$index] );
+                $callback = trim( $matches[3][$index] );
+                $hooks[] = "- {$type} on '{$hook_name}' calling: {$callback}";
+            }
+        }
+        return array_slice( array_unique( $hooks ), 0, 50 );
+    }
+
+    public function ai_chat( $request ) {
+        $params = $request->get_json_params();
+        $message = $params['message'] ?? '';
+        $history = $params['history'] ?? [];
+        $file_context = $params['file_context'] ?? null;
+        $settings = \WP_Synapse_Core::get_instance()->get_settings();
+        $model = !empty($params['model']) ? $params['model'] : (!empty($settings['ai_model']) ? $settings['ai_model'] : (defined('GEMINI_API_MODEL') ? GEMINI_API_MODEL : 'gemini-2.0-flash'));
+        
+        // Auto-fix common model naming issues
+        if ($model === 'gemini-flash-latest' || $model === 'gemini-1.5-flash-latest') {
+            $model = 'gemini-2.0-flash';
+        }
+        
+        $api_key = !empty($settings['ai_api_key']) ? $settings['ai_api_key'] : (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '');
+
+        if ( empty( $api_key ) ) {
+            return new WP_Error( 'missing_key', 'Please provide a Gemini API Key in Settings.', [ 'status' => 400 ] );
+        }
+
+        // Active theme hooks
+        $theme_hooks = $this->get_active_theme_hooks();
+        $hooks_str = ! empty( $theme_hooks ) ? implode( "\n", $theme_hooks ) : "No custom action/filter hooks detected in active theme's functions.php.";
+
+        // Active theme/plugins
+        $active_theme = wp_get_theme();
+        $theme_name = $active_theme->get( 'Name' );
+        $active_plugins = get_option( 'active_plugins', [] );
+        $active_plugins_list = array_map( 'basename', $active_plugins );
+
+        // Build System Prompt
+        $system_prompt = "You are an expert WordPress AI coding assistant integrated into the Synapse Pro IDE.\n\n";
+        $system_prompt .= "Site Environment Context:\n";
+        $system_prompt .= "- Active Theme: {$theme_name}\n";
+        $system_prompt .= "- Active Plugins: " . implode( ', ', $active_plugins_list ) . "\n\n";
+        $system_prompt .= "Hooks detected in active theme's functions.php:\n{$hooks_str}\n\n";
+        
+        if ( $file_context ) {
+            $system_prompt .= "The user is currently viewing/editing a file named '{$file_context['name']}' at path '{$file_context['path']}'.\n";
+            $system_prompt .= "Current file content:\n```\n{$file_context['content']}\n```\n\n";
+        }
+        
+        $system_prompt .= "Capabilities & Guidelines:\n";
+        $system_prompt .= "1. You can fix bugs, refactor code, write unit tests, explain concepts, and add new features.\n";
+        $system_prompt .= "2. You can generate starter file templates or write complete draft code for custom plugins/themes.\n";
+        $system_prompt .= "3. Respond as a helpful assistant. If you suggest code changes, provide the full updated code clearly.\n";
+        $system_prompt .= "4. IMPORTANT: If you suggest code to be applied, wrap it in [CODE_START] and [CODE_END] markers so the IDE can parse it and let the user click 'Apply' or 'Review'.\n";
+
+        // Map Chat History to Gemini API format
+        $contents = [];
+        foreach ( $history as $msg ) {
+            $role = ($msg['role'] === 'assistant' || $msg['role'] === 'model') ? 'model' : 'user';
+            $content = $msg['content'] ?? '';
+            if ( ! empty( $content ) ) {
+                $contents[] = [
+                    'role'  => $role,
+                    'parts' => [
+                        [ 'text' => $content ]
+                    ]
+                ];
+            }
+        }
+
+        // Fallback if history is empty
+        if ( empty( $contents ) ) {
+            $contents[] = [
+                'role'  => 'user',
+                'parts' => [
+                    [ 'text' => $message ]
+                ]
+            ];
+        }
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$api_key}";
+
+        $body = [
+            'contents' => $contents,
+            'systemInstruction' => [
+                'parts' => [
+                    [ 'text' => $system_prompt ]
+                ]
+            ]
+        ];
+
+        $max_retries = 3;
+        $attempt = 0;
+        $response = null;
+        $error_message = '';
+        $status_code = 500;
+
+        while ( $attempt < $max_retries ) {
+            $attempt++;
+            $response = wp_remote_post( $url, [
+                'headers' => [ 'Content-Type' => 'application/json' ],
+                'body'    => json_encode( $body ),
+                'timeout' => 45
+            ] );
+
+            if ( ! is_wp_error( $response ) ) {
+                $res_body = json_decode( wp_remote_retrieve_body( $response ), true );
+                if ( ! isset( $res_body['error'] ) ) {
+                    $error_message = ''; // Reset, we succeeded
+                    break;
+                } else {
+                    $error_message = $res_body['error']['message'] ?? 'API Error';
+                    $status_code = 400;
+                }
+            } else {
+                $error_message = $response->get_error_message();
+                $status_code = 500;
+            }
+
+            if ( $attempt < $max_retries ) {
+                usleep( 500000 ); // Wait 0.5s before next attempt
+            }
+        }
+
+        if ( ! empty( $error_message ) ) {
+            return new WP_Error( 'api_error', $error_message . " (Failed after {$attempt} attempts)", [ 'status' => $status_code ] );
+        }
+
+        $res_body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        $reply = $res_body['candidates'][0]['content']['parts'][0]['text'] ?? 'No response from AI.';
+
+        // Extract suggested code if markers exist
+        $suggested_code = null;
+        if ( preg_match( '/\[CODE_START\](.*?)\[CODE_END\]/s', $reply, $matches ) ) {
+            $suggested_code = trim( $matches[1] );
+            $reply = str_replace( $matches[0], "\n(Suggested code ready to apply below)\n", $reply );
+        }
+
+        return new WP_REST_Response( [
+            'status' => 'success',
+            'reply'  => $reply,
+            'suggested_code' => $suggested_code
+        ], 200 );
+    }
+
+    public function index_files() {
+        if ( ! \WP_Synapse_Core::get_instance()->is_feature_enabled( 'vector_search' ) ) {
+            return new WP_Error( 'locked', 'Vector indexing is a Pro feature.', [ 'status' => 403 ] );
+        }
+        $count = \WP_Synapse_Vector_Store::get_instance()->build_index();
+        return new WP_REST_Response( [ 'status' => 'success', 'count' => $count ], 200 );
+    }
+
+    public function get_settings() {
+        $settings = \WP_Synapse_Core::get_instance()->get_settings();
+        return new WP_REST_Response( $settings, 200 );
+    }
+
+    public function save_settings( $request ) {
+        $params = $request->get_json_params();
+        \WP_Synapse_Core::get_instance()->update_settings( $params );
+        return new WP_REST_Response( [ 'status' => 'success' ], 200 );
+    }
 
 	public function search_files( $request ) {
 		$query = $request->get_param( 'q' ) ?: '';
@@ -131,29 +333,28 @@ class WP_Synapse_API {
 		$root = ABSPATH;
 		$results = [];
 		$found_paths = [];
+		$exclude_dirs = [ 'node_modules', '.git', 'vendor', 'wp-admin', 'wp-includes', 'uploads', 'cache' ];
 
 		// 1. Filename Search (if not 'code' only)
 		if ( $type !== 'code' ) {
-			$iterator = new \RecursiveIteratorIterator(
-				new \RecursiveDirectoryIterator( $root, \RecursiveDirectoryIterator::SKIP_DOTS ),
-				\RecursiveIteratorIterator::SELF_FIRST
-			);
+			$directory = new \RecursiveDirectoryIterator( $root, \RecursiveDirectoryIterator::SKIP_DOTS );
+			$filter = new \RecursiveCallbackFilterIterator( $directory, function ( $current, $key, $iterator ) use ( $exclude_dirs ) {
+				if ( $iterator->hasChildren() ) {
+					return ! in_array( $current->getFilename(), $exclude_dirs );
+				}
+				return true;
+			} );
+
+			$iterator = new \RecursiveIteratorIterator( $filter, \RecursiveIteratorIterator::SELF_FIRST );
 
 			foreach ( $iterator as $file ) {
 				if ( count( $results ) >= 20 ) break;
 
 				$filename = $file->getFilename();
-				$path = $file->getPathname();
-
-				if ( strpos( $path, 'node_modules' ) !== false || 
-					 strpos( $path, '.git' ) !== false || 
-					 strpos( $path, 'vendor' ) !== false ) {
-					continue;
-				}
+				$real_path = $file->getRealPath();
+				$relative_path = ltrim( str_replace( ABSPATH, '', $real_path ), DIRECTORY_SEPARATOR );
 
 				if ( stripos( $filename, $query ) !== false ) {
-					$real_path = $file->getRealPath();
-					$relative_path = ltrim( str_replace( ABSPATH, '', $real_path ), DIRECTORY_SEPARATOR );
 					$results[] = [
 						'name' => $filename,
 						'path' => $relative_path,
@@ -172,9 +373,13 @@ class WP_Synapse_API {
 			$root_path = untrailingslashit( ABSPATH );
 			$root_esc = escapeshellarg( $root_path );
 			
-			// Use individual exclude flags instead of brace expansion for better shell compatibility
-			// Added -E for extended regex support just in case, and simplified include
-			$cmd = "grep -rIn --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=vendor --include=\"*.php\" --include=\"*.js\" --include=\"*.jsx\" --include=\"*.css\" --include=\"*.html\" --include=\"*.json\" {$query_esc} {$root_esc} 2>/dev/null | head -n 50";
+			// Build exclusions for grep command
+			$exclude_flags = '';
+			foreach ( $exclude_dirs as $dir ) {
+				$exclude_flags .= " --exclude-dir=" . escapeshellarg( $dir );
+			}
+			
+			$cmd = "grep -rIn{$exclude_flags} --include=\"*.php\" --include=\"*.js\" --include=\"*.jsx\" --include=\"*.css\" --include=\"*.html\" --include=\"*.json\" {$query_esc} {$root_esc} 2>/dev/null | head -n 50";
 			
 			$output = [];
 			exec( $cmd, $output );
@@ -183,7 +388,6 @@ class WP_Synapse_API {
 				$code_results = [];
 				foreach ( $output as $line ) {
 					// Format: path:line:text
-					// Use a more robust split because paths might contain colons on some systems (though unlikely here)
 					$parts = explode( ':', $line, 3 );
 					if ( count( $parts ) >= 3 ) {
 						$full_path = $parts[0];

@@ -2,31 +2,30 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Folder, Loader2, ListFilter, Code } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileIcon } from '../utils/icons';
+import { useFeatures } from './FeatureContext';
+import FeatureLock from './FeatureLock';
+import { getStorageItem, setStorageItem } from '../utils/storage';
 
 const SidebarSearch = ({ onFileClick, isDarkMode }) => {
-    const [query, setQuery] = useState(() => localStorage.getItem('synapse_search_query') || '');
-    const [results, setResults] = useState(() => {
-        const saved = localStorage.getItem('synapse_search_results');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [searchType, setSearchType] = useState(() => localStorage.getItem('synapse_search_type') || 'both'); // 'both', 'files', 'code'
+    const [searchType, setSearchType] = useState(() => getStorageItem('search_type') || 'files'); 
+    const { isEnabled } = useFeatures();
     const inputRef = useRef(null);
 
     // Save to localStorage when state changes
     useEffect(() => {
-        localStorage.setItem('synapse_search_query', query);
-        localStorage.setItem('synapse_search_type', searchType);
-        localStorage.setItem('synapse_search_results', JSON.stringify(results));
-    }, [query, searchType, results]);
+        setStorageItem('search_type', searchType);
+    }, [searchType]);
 
     useEffect(() => {
         const delayDebounce = setTimeout(async () => {
             if (query.trim().length >= 2) {
                 setLoading(true);
                 try {
-                    const response = await fetch(`${window.wpSynapseAILite.root}/search-files?q=${encodeURIComponent(query)}&type=${searchType}`, {
-                        headers: { 'X-WP-Nonce': window.wpSynapseAILite.nonce }
+                    const response = await fetch(`${window.wpSynapseAI.root}/search-files?q=${encodeURIComponent(query)}&type=${searchType}`, {
+                        headers: { 'X-WP-Nonce': window.wpSynapseAI.nonce }
                     });
                     const data = await response.json();
                     setResults(data);
@@ -62,17 +61,21 @@ const SidebarSearch = ({ onFileClick, isDarkMode }) => {
                         </button>
                         <button 
                             onClick={() => setSearchType('code')}
-                            title="Search Code Only"
+                            title="Search Code Only (Pro)"
                             style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: searchType === 'code' ? 'var(--accent)' : 'var(--text-secondary)', opacity: searchType === 'code' ? 1 : 0.6 }}
+                            disabled={!isEnabled('grep_search') && searchType !== 'code'}
                         >
                             <Code size={14} />
+                            {!isEnabled('grep_search') && <span style={{ position: 'absolute', top: -2, right: -2, width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%' }} />}
                         </button>
                         <button 
                             onClick={() => setSearchType('both')}
-                            title="Search All"
+                            title="Search All (Pro)"
                             style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: searchType === 'both' ? 'var(--accent)' : 'var(--text-secondary)', opacity: searchType === 'both' ? 1 : 0.6 }}
+                            disabled={!isEnabled('grep_search') && searchType !== 'both'}
                         >
                             <ListFilter size={14} />
+                            {!isEnabled('grep_search') && <span style={{ position: 'absolute', top: -2, right: -2, width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%' }} />}
                         </button>
                     </div>
                 </div>

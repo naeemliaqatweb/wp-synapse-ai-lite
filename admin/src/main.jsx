@@ -4,6 +4,7 @@ import App from './App.jsx'
 import SettingsApp from './SettingsApp.jsx'
 import PricingApp from './PricingApp.jsx'
 import PermissionsApp from './PermissionsApp.jsx'
+import { FeatureProvider } from './components/FeatureContext'
 import './index.css'
 
 // Add Google Fonts
@@ -12,13 +13,15 @@ link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700
 link.rel = 'stylesheet';
 document.head.appendChild(link);
 
-const rootEl = document.getElementById('wp-synapse-ai-lite-root');
-const settingsRootEl = document.getElementById('wp-synapse-ai-lite-settings-root');
+const rootEl = document.getElementById('wp-synapse-ai-root');
+const settingsRootEl = document.getElementById('wp-synapse-ai-settings-root');
 
 if (rootEl) {
   ReactDOM.createRoot(rootEl).render(
     <React.StrictMode>
-      <App />
+      <FeatureProvider>
+        <App />
+      </FeatureProvider>
     </React.StrictMode>,
   )
 }
@@ -26,26 +29,30 @@ if (rootEl) {
 if (settingsRootEl) {
   ReactDOM.createRoot(settingsRootEl).render(
     <React.StrictMode>
-      <SettingsApp />
+      <FeatureProvider>
+        <SettingsApp />
+      </FeatureProvider>
     </React.StrictMode>,
   )
 }
 
-const pricingRootEl = document.getElementById('wp-synapse-ai-lite-pricing-root');
+const pricingRootEl = document.getElementById('wp-synapse-ai-pricing-root');
 if (pricingRootEl) {
   ReactDOM.createRoot(pricingRootEl).render(
     <React.StrictMode>
-      <PricingApp />
+      <FeatureProvider>
+        <PricingApp />
+      </FeatureProvider>
     </React.StrictMode>,
   )
 }
-const permissionsRootEl = document.getElementById('wp-synapse-ai-lite-permissions-root');
-console.log('Permissions Root El:', permissionsRootEl);
+const permissionsRootEl = document.getElementById('wp-synapse-ai-permissions-root');
 if (permissionsRootEl) {
-  console.log('Mounting PermissionsApp');
   ReactDOM.createRoot(permissionsRootEl).render(
     <React.StrictMode>
-      <PermissionsApp />
+      <FeatureProvider>
+        <PermissionsApp />
+      </FeatureProvider>
     </React.StrictMode>,
   )
 }

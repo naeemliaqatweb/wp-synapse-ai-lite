@@ -10,8 +10,8 @@ const CodeIndexerTool = () => {
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${window.wpSynapseAILite.root}/index-status`, {
-        headers: { 'X-WP-Nonce': window.wpSynapseAILite.nonce }
+      const response = await fetch(`${window.wpSynapseAI.root}/index-status`, {
+        headers: { 'X-WP-Nonce': window.wpSynapseAI.nonce }
       });
       if (response.ok) {
         const data = await response.json();
@@ -28,9 +28,9 @@ const CodeIndexerTool = () => {
     setRefreshing(true);
     setMessage(null);
     try {
-      const response = await fetch(`${window.wpSynapseAILite.root}/re-index`, {
+      const response = await fetch(`${window.wpSynapseAI.root}/re-index`, {
         method: 'POST',
-        headers: { 'X-WP-Nonce': window.wpSynapseAILite.nonce }
+        headers: { 'X-WP-Nonce': window.wpSynapseAI.nonce }
       });
       if (response.ok) {
         setMessage({ type: 'success', text: 'Theme successfully re-indexed.' });

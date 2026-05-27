@@ -1,0 +1,71 @@
+name: Deploy to Freemius
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tag push e.g. v1.0.1
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+
+jobs:
+  deploy:
+    name: Build & Deploy to Freemius
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Build React Admin UI
+        run: |
+          cd admin
+          npm install
+          npm run build
+          cd ..
+
+      - name: Package Plugin for Distribution
+        run: |
+          # Use folder name corresponding to the plugin slug
+          PLUGIN_SLUG="wp-synapse-ai-premimum"
+          mkdir -p tmp/$PLUGIN_SLUG
+          
+          # Copy files into temp directory
+          cp -r includes tmp/$PLUGIN_SLUG/
+          cp -r premium tmp/$PLUGIN_SLUG/
+          cp -r freemius tmp/$PLUGIN_SLUG/
+          cp -r public tmp/$PLUGIN_SLUG/
+          mkdir -p tmp/$PLUGIN_SLUG/admin
+          cp -r admin/dist tmp/$PLUGIN_SLUG/admin/
+          
+          cp wp-synapse-ai.php tmp/$PLUGIN_SLUG/
+          cp readme.txt tmp/$PLUGIN_SLUG/
+          cp README.md tmp/$PLUGIN_SLUG/
+          cp PRODUCT_DETAILS.md tmp/$PLUGIN_SLUG/
+          cp PACKAGING_GUIDE.md tmp/$PLUGIN_SLUG/
+          cp LICENSE.txt tmp/$PLUGIN_SLUG/
+          
+          # Zip it up
+          cd tmp
+          zip -r ../wp-synapse-ai-premimum.zip $PLUGIN_SLUG -x "*.DS_Store*" "*node_modules*" "*.git*"
+          cd ..
+          rm -rf tmp
+
+      - name: Deploy to Freemius
+        uses: buttonizer/freemius-deploy@v0.1.2
+        with:
+          file_name: wp-synapse-ai-premimum.zip
+          release_mode: pending # pending, beta, or released
+          version: ${{ github.ref_name }} # e.g. v1.0.1
+          sandbox: false
+        env:
+          PUBLIC_KEY: ${{ secrets.FREEMIUS_PUBLIC_KEY }}
+          DEV_ID: ${{ secrets.FREEMIUS_DEV_ID }}
+          SECRET_KEY: ${{ secrets.FREEMIUS_SECRET_KEY }}
+          PLUGIN_SLUG: wp-synapse-ai-premimum
+          PLUGIN_ID: 30668

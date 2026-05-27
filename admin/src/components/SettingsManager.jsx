@@ -1,27 +1,243 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, HelpCircle, Sparkles, AlertCircle, CheckCircle, RefreshCw, Zap, Rocket, FolderOpen, Code, GitCompare, Sun, Search, Upload, Plus, Copy, Move, Archive } from 'lucide-react';
+import { ShieldCheck, HelpCircle, Sparkles, AlertCircle, CheckCircle, RefreshCw, Zap, Rocket, FolderOpen, Code, GitCompare, Sun, Search, Upload, Plus, Copy, Move, Archive, Settings, Star, Lock, Save } from 'lucide-react';
+import { useFeatures } from './FeatureContext';
 
 const SettingsManager = ({ isDarkMode }) => {
+  const { settings, refreshSettings } = useFeatures();
   const [activeTab, setActiveTab] = useState('permissions');
   const [isFixing, setIsFixing] = useState(false);
   const [message, setMessage] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [localSettings, setLocalSettings] = useState(null);
+
+  useEffect(() => {
+    if (settings) setLocalSettings(JSON.parse(JSON.stringify(settings)));
+  }, [settings]);
 
   const tabs = [
     { id: 'permissions', label: 'Permissions', icon: ShieldCheck },
+    { id: 'free_features', label: 'Free Features', icon: Settings },
+    { id: 'pro_features', label: 'Premium Features', icon: Star },
     { id: 'howtouse', label: 'How to Use', icon: HelpCircle },
-    { id: 'upcoming', label: 'Upcoming', icon: Sparkles },
   ];
+
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch(`${window.wpSynapseAI.root}/settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-WP-Nonce': window.wpSynapseAI.nonce
+        },
+        body: JSON.stringify(localSettings)
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        refreshSettings();
+        setMessage({ type: 'success', text: 'Settings saved successfully!' });
+      } else {
+        setMessage({ type: 'error', text: data.message || 'Failed to save settings' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Network error occurred' });
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const toggleFeature = (feature) => {
+    setLocalSettings(prev => ({
+        ...prev,
+        features: {
+            ...prev.features,
+            [feature]: !prev.features[feature]
+        }
+    }));
+  };
+
+  const ToggleSwitch = ({ label, checked, onChange, isPro = false }) => {
+    const isDisabled = isPro && !localSettings?.is_premium && !localSettings?.dev_mode;
+    return (
+      <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          padding: '16px', 
+          background: 'rgba(255,255,255,0.02)', 
+          borderRadius: '12px', 
+          marginBottom: '12px',
+          border: '1px solid var(--border)',
+          opacity: isDisabled ? 0.65 : 1
+      }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>{label}</span>
+              {isPro && <span style={{ fontSize: '0.65rem', background: 'var(--accent)', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>PRO</span>}
+          </div>
+          <button 
+              onClick={isDisabled ? () => { window.open(window.wpSynapseAI?.upgradeUrl, '_top'); } : onChange}
+              style={{
+                  width: '44px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  background: checked && !isDisabled ? 'var(--accent)' : 'var(--bg-tertiary)',
+                  position: 'relative',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+              }}
+          >
+              <div style={{
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  position: 'absolute',
+                  top: '3px',
+                  left: checked && !isDisabled ? '23px' : '3px',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }} />
+          </button>
+      </div>
+    );
+  };
+
+  const renderFeatureSection = (type) => {
+    const isProTab = type === 'pro';
+    if (!localSettings) return null;
+
+    return (
+        <div className="settings-content-fade">
+            <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                    <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 12px 0', color: 'var(--text-primary)' }}>
+                        {isProTab ? 'Premium Features' : 'Core Components'}
+                    </h2>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                        {isProTab ? 'Unlock advanced AI tools and professional development utilities.' : 'Manage the basic IDE features available in the Lite version.'}
+                    </p>
+                </div>
+                <button 
+                    className="synapse-btn" 
+                    onClick={handleSaveSettings}
+                    disabled={isSaving}
+                    style={{ 
+                        background: 'linear-gradient(135deg, #6366f1, #a855f7)', 
+                        padding: '12px 32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}
+                >
+                    {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                    Save Settings
+                </button>
+            </div>
+
+            {isProTab && !localSettings.is_premium && !localSettings.dev_mode && (
+                <div style={{ 
+                    padding: '24px', 
+                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1))', 
+                    borderRadius: '16px', 
+                    border: '1px solid rgba(99, 102, 241, 0.2)',
+                    marginBottom: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '20px'
+                }}>
+                    <div style={{ background: 'var(--accent)', padding: '12px', borderRadius: '12px', color: 'white' }}>
+                        <Lock size={24} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 4px 0', color: 'var(--text-primary)' }}>Premium License Required</h4>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>These features are currently locked. Upgrade to Pro to enable them.</p>
+                    </div>
+                    <a 
+                        href={window.wpSynapseAI?.upgradeUrl || '#'} 
+                        target="_top" 
+                        className="synapse-btn" 
+                        style={{ 
+                            background: 'var(--accent)', 
+                            textDecoration: 'none', 
+                            display: 'inline-flex', 
+                            alignItems: 'center' 
+                        }}
+                    >
+                        Upgrade Now
+                    </a>
+                </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
+                {!isProTab ? (
+                    <>
+                        <ToggleSwitch label="Monaco Editor (VS Code)" checked={localSettings.features.monaco_editor} onChange={() => toggleFeature('monaco_editor')} />
+                        <ToggleSwitch label="File Explorer" checked={localSettings.features.file_manager} onChange={() => toggleFeature('file_manager')} />
+                        <ToggleSwitch label="Basic Search" checked={localSettings.features.basic_search} onChange={() => toggleFeature('basic_search')} />
+                        <ToggleSwitch label="Theme Toggle" checked={localSettings.features.theme_toggle} onChange={() => toggleFeature('theme_toggle')} />
+                        <ToggleSwitch label="File Uploads" checked={localSettings.features.uploads} onChange={() => toggleFeature('uploads')} />
+                    </>
+                ) : (
+                    <>
+                        <ToggleSwitch label="Global Grep Search" checked={localSettings.features.grep_search} onChange={() => toggleFeature('grep_search')} isPro />
+                        <ToggleSwitch label="Diff / Review Mode" checked={localSettings.features.diff_mode} onChange={() => toggleFeature('diff_mode')} isPro />
+                        <ToggleSwitch label="ZIP Tools (Compress/Extract)" checked={localSettings.features.zip_tools} onChange={() => toggleFeature('zip_tools')} isPro />
+                        <ToggleSwitch label="AI Code Assistant (Chat)" checked={localSettings.features.ai_chat} onChange={() => toggleFeature('ai_chat')} isPro />
+                        <ToggleSwitch label="Vector Code Indexing" checked={localSettings.features.vector_search} onChange={() => toggleFeature('vector_search')} isPro />
+                        <ToggleSwitch label="Terminal / Shell" checked={localSettings.features.terminal} onChange={() => toggleFeature('terminal')} isPro />
+                    </>
+                )}
+            </div>
+            
+            {isProTab && (
+                <div style={{ marginTop: '40px', padding: '32px', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border)' }}>
+                    <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem' }}>AI Configuration</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Gemini API Key</label>
+                            <input 
+                                type="password" 
+                                value={localSettings.ai_api_key} 
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, ai_api_key: e.target.value }))}
+                                style={{ width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0px 22px', color: 'rgb(255, 255, 255)', height: '40px' }}
+                                placeholder="Enter API Key"
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Model</label>
+                            <select 
+                                value={localSettings.ai_model} 
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, ai_model: e.target.value }))}
+                                style={{ width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0px 22px', color: 'rgb(255, 255, 255)', height: '40px' }}
+                            >
+                                <option value="gemini-flash-latest">Gemini Flash (Latest - Recommended)</option>
+                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fastest)</option>
+                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Stable)</option>
+                                <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
+                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Stable)</option>
+                                <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Latest)</option>
+                                <option value="gemini-pro">Gemini Pro (Legacy)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+  };
 
   const handleFixPermissions = async (path, mode) => {
     setIsFixing(true);
     setMessage(null);
     try {
-      const response = await fetch(`${window.wpSynapseAILite.root}/fix-permissions`, {
+      const response = await fetch(`${window.wpSynapseAI.root}/fix-permissions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-WP-Nonce': window.wpSynapseAILite.nonce
+          'X-WP-Nonce': window.wpSynapseAI.nonce
         },
         body: JSON.stringify({ path, mode })
       });
@@ -235,8 +451,9 @@ const SettingsManager = ({ isDarkMode }) => {
             transition={{ duration: 0.2 }}
           >
             {activeTab === 'permissions' && renderPermissions()}
+            {activeTab === 'free_features' && renderFeatureSection('free')}
+            {activeTab === 'pro_features' && renderFeatureSection('pro')}
             {activeTab === 'howtouse' && renderHowToUse()}
-            {activeTab === 'upcoming' && renderUpcoming()}
           </motion.div>
         </AnimatePresence>
       </div>

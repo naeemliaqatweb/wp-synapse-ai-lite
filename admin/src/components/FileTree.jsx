@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Folder, ChevronRight, ChevronDown, Plus, FolderPlus, Trash2, X, Check, Edit2, MoreVertical, Archive, PackageOpen, Upload, RefreshCw, FolderMinus, ZoomIn, ZoomOut, Copy, Move, Search } from 'lucide-react';
 import { getFileIcon } from '../utils/icons';
+import { useFeatures } from './FeatureContext';
 
 const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteItem, onRenameItem, onZipItem, onUnzipItem, onUploadFile, onOpenUpload, onRefresh, refreshTrigger, collapseAllTrigger, treeFontSize, onDuplicateItem, onMoveItem, onOpenMoveModal }) => {
+  const { isEnabled } = useFeatures();
   const [isOpen, setIsOpen] = useState(false);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,8 +42,8 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
   const fetchChildren = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${window.wpSynapseAILite.root}/files?path=${encodeURIComponent(node.path)}`, {
-        headers: { 'X-WP-Nonce': window.wpSynapseAILite.nonce }
+      const response = await fetch(`${window.wpSynapseAI.root}/files?path=${encodeURIComponent(node.path)}`, {
+        headers: { 'X-WP-Nonce': window.wpSynapseAI.nonce }
       });
       const data = await response.json();
       setChildren(data);
@@ -327,13 +329,15 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
                                 >
                                     <FolderPlus size={12} /> New Folder
                                 </div>
-                                <div 
-                                    className="menu-item"
-                                    onClick={handleUploadClick}
-                                    style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                >
-                                    <Upload size={12} /> Upload File
-                                </div>
+                                {isEnabled('uploads') && (
+                                    <div 
+                                        className="menu-item"
+                                        onClick={handleUploadClick}
+                                        style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                    >
+                                        <Upload size={12} /> Upload File
+                                    </div>
+                                )}
                                 <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
                             </>
                         )}
@@ -365,22 +369,24 @@ const FileItem = ({ node, onFileClick, onCreateFile, onCreateFolder, onDeleteIte
                         >
                             <Search size={12} /> Move to Folder...
                         </div>
-                        {node.name.toLowerCase().endsWith('.zip') ? (
-                            <div 
-                                className="menu-item"
-                                onClick={handleUnzip}
-                                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                            >
-                                <PackageOpen size={12} /> Extract ZIP
-                            </div>
-                        ) : (
-                            <div 
-                                className="menu-item"
-                                onClick={handleZip}
-                                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                        {isEnabled('zip_tools') && (
+                            node.name.toLowerCase().endsWith('.zip') ? (
+                                <div 
+                                    className="menu-item"
+                                    onClick={handleUnzip}
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
                                 >
-                                <Archive size={12} /> Compress to ZIP
-                            </div>
+                                    <PackageOpen size={12} /> Extract ZIP
+                                </div>
+                            ) : (
+                                <div 
+                                    className="menu-item"
+                                    onClick={handleZip}
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                    >
+                                    <Archive size={12} /> Compress to ZIP
+                                </div>
+                            )
                         )}
                         <div 
                             className="menu-item"

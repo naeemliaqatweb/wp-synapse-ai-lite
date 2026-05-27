@@ -17,8 +17,14 @@ class WP_Synapse_Core {
 
     public static function create_tables() {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'synapse_chats_lite';
-       		// Initial check for upload directory
+        $table_name = $wpdb->prefix . 'synapse_chats';
+        
+        // Initialize settings if they don't exist
+        if ( false === get_option( 'wp_synapse_ai_settings' ) ) {
+            self::get_instance()->initialize_default_settings();
+        }
+
+       	// Initial check for upload directory
 		$upload_dir = wp_upload_dir();
 		$backup_dir = $upload_dir['basedir'] . '/wp-synapse-backups';
 		if ( ! file_exists( $backup_dir ) ) {
@@ -26,11 +32,90 @@ class WP_Synapse_Core {
 		}
 	}
 
+    public function initialize_default_settings() {
+        $defaults = [
+            'dev_mode' => false,
+            'is_premium' => false,
+            'features' => [
+                'monaco_editor' => true,
+                'file_manager' => true,
+                'basic_search' => true,
+                'theme_toggle' => true,
+                'uploads' => true,
+                'grep_search' => false,
+                'diff_mode' => false,
+                'zip_tools' => false,
+                'persistent_tabs' => false,
+                'ai_chat' => false,
+                'vector_search' => false,
+                'git_integration' => false,
+                'terminal' => false
+            ],
+            'ai_api_key' => ''
+        ];
+        update_option( 'wp_synapse_ai_settings', $defaults );
+    }
+
+    public function get_settings() {
+        $defaults = [
+            'dev_mode'    => false,
+            'is_premium'  => false,
+            'features'    => [
+                'monaco_editor'   => true,
+                'file_manager'    => true,
+                'basic_search'    => true,
+                'theme_toggle'    => true,
+                'uploads'         => true,
+                'grep_search'     => false,
+                'diff_mode'       => false,
+                'zip_tools'       => false,
+                'persistent_tabs' => false,
+                'ai_chat'         => false,
+                'vector_search'   => false,
+                'terminal'        => false
+            ],
+            'ai_api_key'  => '',
+            'ai_model'    => 'gemini-2.0-flash'
+        ];
+        $settings = get_option( 'wp_synapse_ai_settings', $defaults );
+        $settings = array_merge( $defaults, (array) $settings );
+        $settings['is_premium'] = wp_synapse_ai_fs()->can_use_premium_code();
+        return $settings;
+    }
+
+    public function update_settings( $settings ) {
+        return update_option( 'wp_synapse_ai_settings', $settings );
+    }
+
+    public function is_feature_enabled( $feature ) {
+        $settings = $this->get_settings();
+        
+        // Dev mode unlocks everything
+        if ( ! empty( $settings['dev_mode'] ) ) return true;
+
+        $features = isset( $settings['features'] ) ? (array) $settings['features'] : [];
+        
+        // Check if feature is enabled in settings
+        if ( empty( $features[$feature] ) ) {
+            return false;
+        }
+
+        // Basic features are free
+        $basic_features = [ 'monaco_editor', 'file_manager', 'basic_search', 'theme_toggle', 'uploads' ];
+        if ( in_array( $feature, $basic_features ) ) {
+            return true;
+        }
+
+        // Pro features require premium status
+        return wp_synapse_ai_fs()->can_use_premium_code();
+    }
+
 	private function __construct() {
 		$this->init_hooks();
 		// Initialize Sub-components
 		\WP_Synapse_API::get_instance();
 		\WP_Synapse_Security::get_instance();
+        \WP_Synapse_Vector_Store::get_instance();
 	}
 
 	private function init_hooks() {
@@ -40,10 +125,10 @@ class WP_Synapse_Core {
 
 	public function register_admin_menu() {
 		add_menu_page(
-			__( 'Synapse Lite – AI Code Editor', 'wp-synapse-ai-lite' ),
-			__( 'Synapse Lite', 'wp-synapse-ai-lite' ),
+			__( 'Synapse Pro – AI Code Editor', 'wp-synapse-ai' ),
+			__( 'Synapse Pro', 'wp-synapse-ai' ),
 			'manage_options',
-			'wp-synapse-ai-lite',
+			'wp-synapse-ai',
 			[ $this, 'render_admin_page' ],
 			'dashicons-superhero',
 			25
@@ -52,33 +137,24 @@ class WP_Synapse_Core {
         // Hidden Settings page for plugin action links
         add_submenu_page(
             null,
-            __( 'Settings', 'wp-synapse-ai-lite' ),
-            __( 'Settings', 'wp-synapse-ai-lite' ),
+            __( 'Settings', 'wp-synapse-ai' ),
+            __( 'Settings', 'wp-synapse-ai' ),
             'manage_options',
-            'wp-synapse-ai-lite-settings',
+            'wp-synapse-ai-settings',
             [ $this, 'render_settings_page' ]
         );
 	}
 
 	public function render_admin_page() {
-        if ( ! wsaltuwifm_fs()->is_registered() || ! wsaltuwifm_fs()->can_use_premium_code() ) {
-            return;
-        }
-		echo '<div id="wp-synapse-ai-lite-root"></div>';
+		echo '<div id="wp-synapse-ai-root"></div>';
 	}
 
 	public function render_settings_page() {
-        if ( ! wsaltuwifm_fs()->is_registered() || ! wsaltuwifm_fs()->can_use_premium_code() ) {
-            return;
-        }
-		echo '<div id="wp-synapse-ai-lite-settings-root"></div>';
+		echo '<div id="wp-synapse-ai-settings-root"></div>';
 	}
 
 	public function render_pricing_page() {
-        if ( ! wsaltuwifm_fs()->is_registered() || ! wsaltuwifm_fs()->can_use_premium_code() ) {
-            return;
-        }
-		echo '<div id="wp-synapse-ai-lite-pricing-root"></div>';
+		echo '<div id="wp-synapse-ai-pricing-root"></div>';
 	}
 
 	public function render_permissions_page() {
@@ -207,15 +283,15 @@ class WP_Synapse_Core {
 	}
 
 	public function render_how_to_use_page() {
-		$hero_img = WP_SYNAPSE_AI_LITE_URL . 'public/how-to-use.png';
-		$interface_img = WP_SYNAPSE_AI_LITE_URL . 'public/interface-preview.png';
+		$hero_img = WP_SYNAPSE_AI_URL . 'public/how-to-use.png';
+		$interface_img = WP_SYNAPSE_AI_URL . 'public/interface-preview.png';
 		
 		echo '<div style="padding: 30px; background: #0f172a; color: #f1f5f9; min-height: 100vh; font-family: \'Inter\', sans-serif; display: block; visibility: visible; opacity: 1;">';
 		echo '<div style="max-width: 1100px; margin: 0 auto;">';
 		
 		// Header Section
 		echo '<div style="margin-bottom: 50px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 30px;">';
-		echo '<h1 style="font-size: 2.2rem; font-weight: 800; margin: 0 0 10px 0; color: #fff;">Synapse Lite Documentation</h1>';
+		echo '<h1 style="font-size: 2.2rem; font-weight: 800; margin: 0 0 10px 0; color: #fff;">Synapse Pro Documentation</h1>';
 		echo '<p style="font-size: 1.1rem; color: #94a3b8; margin: 0;">Everything you need to know to get started with the ultimate WP code editor.</p>';
 		echo '</div>';
 
@@ -259,43 +335,42 @@ class WP_Synapse_Core {
 	}
 
 	public function enqueue_admin_assets( $hook ) {
-		error_log( 'Synapse Lite Hook: ' . $hook );
+		error_log( 'Synapse Pro Hook: ' . $hook );
 		if ( $hook === 'plugins.php' ) {
-			wp_enqueue_script( 'wp-synapse-ai-lite-deactivation', WP_SYNAPSE_AI_LITE_URL . 'admin/assets/js/deactivation.js', [ 'jquery' ], WP_SYNAPSE_AI_LITE_VERSION, true );
+            // Deactivation script logic can be added here for Pro if needed
 		}
 
 		if ( strpos( $hook, 'synapse' ) === false ) {
 			return;
 		}
 
-        // License Check
-        if ( ! wsaltuwifm_fs()->is_registered() || ! wsaltuwifm_fs()->can_use_premium_code() ) {
-            return;
-        }
+        // Freemius check removed.
 
 		// Enqueue React application
-		// In production, we'd point to the built files.
-		// For development, we'll check for a local dev server or use built files.
-		$is_dev = defined( 'WP_SYNAPSE_AI_LITE_DEV' ) && WP_SYNAPSE_AI_LITE_DEV;
+		$is_dev = defined( 'WP_SYNAPSE_AI_DEV' ) && WP_SYNAPSE_AI_DEV;
 
 		if ( $is_dev ) {
-			wp_enqueue_script( 'wp-synapse-ai-lite-vite', 'http://localhost:5173/@vite/client', [], null, true );
-			wp_enqueue_script( 'wp-synapse-ai-lite-app', 'http://localhost:5173/src/main.jsx', [ 'wp-synapse-ai-lite-vite', 'wp-i18n', 'jquery' ], null, true );
+			wp_enqueue_script( 'wp-synapse-ai-vite', 'http://localhost:5173/@vite/client', [], null, true );
+			wp_enqueue_script( 'wp-synapse-ai-app', 'http://localhost:5173/src/main.jsx', [ 'wp-synapse-ai-vite', 'wp-i18n', 'wp-hooks', 'wp-data', 'wp-api-fetch', 'wp-url', 'wp-element', 'jquery' ], null, true );
 		} else {
 			// Production build enqueuing
-			$dist_path = WP_SYNAPSE_AI_LITE_PATH . 'admin/dist/assets/';
-			$dist_url  = WP_SYNAPSE_AI_LITE_URL . 'admin/dist/assets/';
+			$dist_path = WP_SYNAPSE_AI_PATH . 'admin/dist/assets/';
+			$dist_url  = WP_SYNAPSE_AI_URL . 'admin/dist/assets/';
 			
 			if ( file_exists( $dist_path . 'index.js' ) ) {
-				wp_enqueue_script( 'wp-synapse-ai-lite-app', $dist_url . 'index.js', [ 'wp-i18n', 'jquery' ], time(), true );
-				wp_enqueue_style( 'wp-synapse-ai-lite-style', $dist_url . 'index.css', [], time() );
+				wp_enqueue_script( 'wp-synapse-ai-app', $dist_url . 'index.js', [ 'wp-i18n', 'wp-hooks', 'wp-data', 'wp-api-fetch', 'wp-url', 'wp-element', 'jquery' ], time(), true );
+				wp_enqueue_style( 'wp-synapse-ai-style', $dist_url . 'index.css', [], time() );
 			}
 		}
 
-		wp_localize_script( 'wp-synapse-ai-lite-app', 'wpSynapseAILite', [
-			'root' => esc_url_raw( rest_url( 'wp-synapse-ai-lite/v1' ) ),
+		wp_localize_script( 'wp-synapse-ai-app', 'wpSynapseAI', [
+			'root' => esc_url_raw( rest_url( 'wp-synapse-ai/v1' ) ),
 			'nonce' => wp_create_nonce( 'wp_rest' ),
-			'assetsUrl' => WP_SYNAPSE_AI_LITE_URL . 'admin/src/assets',
+			'assetsUrl' => WP_SYNAPSE_AI_URL . 'admin/src/assets',
+			'siteId' => md5( site_url() ),
+			'isPremium' => wp_synapse_ai_fs()->can_use_premium_code(),
+			'upgradeUrl' => wp_synapse_ai_fs()->get_upgrade_url(),
+			'trialUrl' => wp_synapse_ai_fs()->get_trial_url(),
 		] );
 	}
 }

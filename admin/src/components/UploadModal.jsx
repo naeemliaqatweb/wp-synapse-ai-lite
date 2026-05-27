@@ -33,9 +33,9 @@ const UploadModal = ({ isOpen, onClose, targetPath, onUpload, isDarkMode }) => {
     const handleFixPermissions = async () => {
         setFixingPermissions(true);
         try {
-            const response = await fetch(`${window.wpSynapseAILite.root}/fix-permissions`, {
+            const response = await fetch(`${window.wpSynapseAI.root}/fix-permissions`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': window.wpSynapseAILite.nonce },
+                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': window.wpSynapseAI.nonce },
                 body: JSON.stringify({ path: targetPath, mode: 'allow' })
             });
             const data = await response.json();
