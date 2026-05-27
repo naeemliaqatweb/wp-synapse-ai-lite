@@ -60,3 +60,4 @@ The core file management and search features work locally. Some AI assistance fe
 * Integrated Monaco Code Editor.
 * Light/Dark mode support.
 # wp-synapse-ai
+# wp-synapse-ai
